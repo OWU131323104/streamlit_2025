@@ -603,6 +603,24 @@ if all_fields_filled:
             else:
                 st.write("画像が見つかりませんでした。")
             st.markdown(char["desc"].replace('\n', '<br>'), unsafe_allow_html=True)
+
+            # 関連人物を折りたたみセクションで表示
+            char_group = char["desc"].split("【")[1].split("】")[0]  # desc内の括弧内の文字を取得
+            related_characters = [
+                related_char for related_char in characters
+                if char_group in related_char["desc"] and related_char["name"] != char["name"]
+            ]
+            if related_characters:
+                with st.expander("関連人物", expanded=False):
+                    for related_char in related_characters:
+                        st.markdown(f"#### {related_char['name']}")
+                        if "image" in related_char:
+                            image_path = os.path.join(os.getcwd(), related_char["image"])
+                            if os.path.exists(image_path):
+                                st.image(image_path, width=150)
+                            else:
+                                st.write("画像が見つかりませんでした。")
+                        st.markdown(related_char["desc"].replace('\n', '<br>'), unsafe_allow_html=True)
             st.write("---")
     else:
         for i, char in enumerate(recommendations):
