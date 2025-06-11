@@ -379,7 +379,7 @@ if st.button("キャラクターを紹介"):
                 "image": "kazuma.webp"
             },
             {
-                "name": "平 滝夜叉丸（たいらの たきやしゃまる）",
+                "name": "平滝夜叉丸（たいらのたきやしゃまる）",
                 "type": ["お調子者" ,"元気"],
                 "appearance": ["美人", "かっこいい"],
                 "first_person": ["私"],
@@ -545,7 +545,7 @@ if st.button("キャラクターを紹介"):
                 "first_person": ["僕"],
                 "age_min": 14,
                 "age_max": 20,
-                "desc": "【忍術学園関係者】\n忍術学園　事務員\n忍術学園の出入りチェックにはきびしく、入門票と出門票のサイン確認は欠かさない！だけど、\nドジを踏んだり、失敗したりすることが多い。\n忍者になるのが夢。（忍者3級は持っている）",
+                "desc": "【忍術学園関係者】\n忍術学園　事務員\n忍術学園の出入りチェックにはきびしく、入門票と出門票のサイン確認は欠かさない！だけど、ドジを踏んだり、失敗したりすることが多い。\n忍者になるのが夢。（忍者3級は持っている）",
                 "image": "syuusaku.webp"
             },
             {
@@ -555,7 +555,7 @@ if st.button("キャラクターを紹介"):
                 "first_person": ["私"],
                 "age_min": 16,
                 "age_max": 25,
-                "desc": "【忍術学園関係者】\n忍術学園　事務員【忍たまたちの家族やおともだち】\n山田先生のひとり息子。フリーの売れっ子忍者として大活躍している。\n山田先生が家に帰ってこず、忍術学園に来ることもしばしば。\n小さいころから土井先生を慕っている。",
+                "desc": "【忍術学園関係者】\n山田先生のひとり息子。フリーの売れっ子忍者として大活躍している。\n山田先生が家に帰ってこず、忍術学園に来ることもしばしば。\n小さいころから土井先生を慕っている。",
                 "image": "rikiti.webp"
             },
             {
@@ -589,6 +589,48 @@ if st.button("キャラクターを紹介"):
             ):
                 recommendations.append(char)
 
+        def get_related_characters(target_char, all_chars):
+            # desc内の括弧内のグループ名
+            char_group = target_char["desc"].split("【")[1].split("】")[0]
+            related = []
+            # 1. グループ名一致
+            for related_char in all_chars:
+                if (
+                    char_group in related_char["desc"]
+                    and related_char["name"] != target_char["name"]
+                    and related_char not in related
+                ):
+                    related.append(related_char)
+            # 2. descに他キャラの名字・下の名前・フルネームが含まれている場合
+            for related_char in all_chars:
+                if related_char["name"] == target_char["name"]:
+                    continue
+                # フルネーム（括弧前まで）
+                full_name = related_char["name"].split("（")[0]
+                # 名字・下の名前（全角・半角スペース対応）
+                if " " in full_name:
+                    last_name, first_name = full_name.split(" ", 1)
+                elif "　" in full_name:
+                    last_name, first_name = full_name.split("　", 1)
+                else:
+                    last_name, first_name = full_name, ""
+                # 関連候補名リスト
+                related_names = [full_name]
+                if last_name and last_name not in related_names:
+                    related_names.append(last_name)
+                if first_name and first_name not in related_names:
+                    related_names.append(first_name)
+                # descに含まれているか
+                if any(n and n in target_char["desc"] for n in related_names):
+                    if related_char not in related:
+                        related.append(related_char)
+            # --- 山田伝蔵のときは山田利吉を必ず追加 ---
+            if target_char["name"].startswith("山田 伝蔵"):
+                for related_char in all_chars:
+                    if related_char["name"].startswith("山田 利吉") and related_char not in related:
+                        related.append(related_char)
+            return related
+
         if not recommendations:
             st.info("あなたの好みに合うキャラクターが見つかりませんでした。ランダムで3人紹介します！")
             random_chars = random.sample(characters, min(3, len(characters)))
@@ -605,11 +647,7 @@ if st.button("キャラクターを紹介"):
                 st.markdown(char["desc"].replace('\n', '<br>'), unsafe_allow_html=True)
 
                 # 関連人物を折りたたみセクションで表示
-                char_group = char["desc"].split("【")[1].split("】")[0]  # desc内の括弧内の文字を取得
-                related_characters = [
-                    related_char for related_char in characters
-                    if char_group in related_char["desc"] and related_char["name"] != char["name"]
-                ]
+                related_characters = get_related_characters(char, characters)
                 if related_characters:
                     with st.expander("関連人物", expanded=False):
                         for related_char in related_characters:
@@ -636,11 +674,7 @@ if st.button("キャラクターを紹介"):
                 st.markdown(char["desc"].replace('\n', '<br>'), unsafe_allow_html=True)
 
                 # 関連人物を折りたたみセクションで表示
-                char_group = char["desc"].split("【")[1].split("】")[0]  # desc内の括弧内の文字を取得
-                related_characters = [
-                    related_char for related_char in characters
-                    if char_group in related_char["desc"] and related_char["name"] != char["name"]
-                ]
+                related_characters = get_related_characters(char, characters)
                 if related_characters:
                     with st.expander("関連人物", expanded=False):
                         for related_char in related_characters:
@@ -655,4 +689,3 @@ if st.button("キャラクターを紹介"):
                 st.write("---")
 
         st.success("キャラクターの紹介が完了しました！")
- 
